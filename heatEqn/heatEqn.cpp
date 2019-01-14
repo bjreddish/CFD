@@ -4,16 +4,17 @@
 
 #define pi 3.14159265
 // Declare variables
-int numPoints=100;  //number of elements to calculate
-int timeEnd=10;    // end time
+int numPoints=20;  //number of elements to calculate
+float timeEnd=0.75;    // end time
 float time=0;
 float bcLeft=0; // temperature bc on the left
 float bcRight=0; // temperature bc on the right
 float deltax;
-float deltat=0.01;
+float deltat=0.005;
 float L=1;
 float alpha=0.1; // diffusivity constant
-
+float r;
+float r2;
 
 int main() 
 {
@@ -41,21 +42,23 @@ int main()
     }
     outputFile << "\n";
 
-
+    r = alpha*deltat/(deltax*deltax);
+    r2 = 1 - 2*r;
     while (time<timeEnd)
     {
-    	outputFile << "0,";// far left node
+    	outputFile << "0";// far left node
     	for (int j = 1; j <= numPoints-2; j++) // itterating from index 1 to 98 (index 0 and 99 are const)
    		{
-    		tempNew[j] =tempOld[j] + alpha*deltat*(1/(deltax*deltax))*(tempOld[j+1]-2*tempOld[j]+tempOld[j-1]);
+    		tempNew[j] = tempOld[j] + alpha*deltat/(deltax*deltax)*(tempOld[j+1]-2*tempOld[j]+tempOld[j-1]);
     		outputFile << "," << tempNew[j];
     	}
     	outputFile << "," <<"0\n";// far right node
-    	time = time+deltat;
+    	
     	for (int k =1; k<= numPoints-2;k++)
     	{
     		tempOld[k]=tempNew[k];
     	}	
+    	time = time+deltat;
     }
 
     outputFile.close();
