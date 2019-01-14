@@ -6,7 +6,7 @@
 // Declare variables
 int numPoints=20;  //number of elements to calculate
 float timeEnd=0.75;    // end time
-float time=0;
+float timeCurr=0.0;
 float bcLeft=0; // temperature bc on the left
 float bcRight=0; // temperature bc on the right
 float deltax;
@@ -44,7 +44,7 @@ int main()
 
     r = alpha*deltat/(deltax*deltax);
     r2 = 1 - 2*r;
-    while (time<timeEnd)
+    while (timeCurr<timeEnd)
     {
     	outputFile << "0";// far left node
     	for (int j = 1; j <= numPoints-2; j++) // itterating from index 1 to 98 (index 0 and 99 are const)
@@ -58,7 +58,7 @@ int main()
     	{
     		tempOld[k]=tempNew[k];
     	}	
-    	time = time+deltat;
+    	timeCurr = timeCurr+deltat;
     }
 
     outputFile.close();
