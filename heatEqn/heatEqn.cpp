@@ -6,11 +6,13 @@
 // Declare variables
 int numPoints=100;  //number of elements to calculate
 int timeEnd=10;    // end time
+float time=0;
 float bcLeft=0; // temperature bc on the left
 float bcRight=0; // temperature bc on the right
 float deltax;
 float deltat=0.01;
 float L=1;
+float alpha=0.1; // diffusivity constant
 
 
 int main() 
@@ -19,27 +21,41 @@ int main()
 	// Setting up output file
 	std::ofstream outputFile;
 	outputFile.open("output.txt");
-	outputFile << 1;
-	for (int i = 2; i <= numPoints; i++) 
-    {
-    	outputFile << "," <<i;
-    }
 	//Set up arrays
 	deltax = L/numPoints;
     float tempOld[numPoints];
     float tempNew[numPoints];
-    float temp[numPoints];
-    temp[0] = bcLeft;
-    temp[numPoints-1] = bcRight;
+
+    tempOld[0] = bcLeft;
+    tempOld[numPoints-1] = bcRight;
     // Populate the initial conditions
     for (int j = 1; j <= numPoints-2; j++) // itterating from index 1 to 98 (index 0 and 99 are const)
     {
-    	temp[j] = sin(pi*j*deltax/L);
+    	tempOld[j] = sin(pi*j*deltax/L);
     }
-    
-    for (int i = 0; i < numPoints; i++) 
+    // Print out initial conditions for the sim t=0
+    outputFile << "0";
+    for (int i = 1; i < numPoints; i++) 
     {
-    	std::cout << i << " : "<<temp[i] << "\n";
+    	outputFile << "," << tempOld[i];
+    }
+    outputFile << "\n";
+
+
+    while (time<timeEnd)
+    {
+    	outputFile << "0,";// far left node
+    	for (int j = 1; j <= numPoints-2; j++) // itterating from index 1 to 98 (index 0 and 99 are const)
+   		{
+    		tempNew[j] =tempOld[j] + alpha*deltat*(1/(deltax*deltax))*(tempOld[j+1]-2*tempOld[j]+tempOld[j-1]);
+    		outputFile << "," << tempNew[j];
+    	}
+    	outputFile << "," <<"0\n";// far right node
+    	time = time+deltat;
+    	for (int k =1; k<= numPoints-2;k++)
+    	{
+    		tempOld[k]=tempNew[k];
+    	}	
     }
 
     outputFile.close();
