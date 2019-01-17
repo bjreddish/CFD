@@ -8,10 +8,10 @@ int numPoints=7;          //number of nodes
 float timeEnd=0.75;        // end time
 float timeCurr=0.0;        // current time - initialized at zero
 float deltax;              // discritized length
-float deltat=0.001;        // time step
+float deltat=0.0001;        // time step
 float L=1;                 // length of our 1-D object 
 float alpha=0.1;           // diffusivity constant
-
+int prog=1;
 
 int main() 
 {
@@ -75,19 +75,15 @@ int main()
     //***************************************//
     //******************SOLVE****************//
     //***************************************//
-
+    // std::cout.precision(2);
     // Itterate through the time steps
      while (timeCurr<=timeEnd)
     {
         outputFile<< "Time="<< timeCurr<<"," << "0";// far left node
-        std::cout << "Values for the nodes at time = "<< timeCurr <<" sec:\n";
-        std::cout << "0";
         for (int i=1;i<numPoints;i++)
         {
-            std::cout << "," << F[i];
             outputFile << "," << F[i];
         }
-        std::cout << " \n";
         outputFile << " \n";
         // Fill in the vlaues for the D array (as the b in the commonly known Ax=b equation)
         for (int i=0;i<numPoints-2;i++) // starts at node two F[1] 
@@ -113,8 +109,13 @@ int main()
         }
 
     	timeCurr = timeCurr+deltat;
+        if ((int)((timeCurr/timeEnd)*100)>prog)
+        {
+            std::cout << prog << "% complete\n";
+            prog=prog+1;
+        }
     }
-
+    std::cout << "100% complete\n";
     outputFile.close();
     return 0;
 }
