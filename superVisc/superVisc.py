@@ -12,6 +12,34 @@ def calcMu(muRef,temp,tempRef):
 	mu = muRef* ( (temp/tempRef)**(3/2) ) * ( (tempRef+110)/(temp+110) )
 	return mu
 
+	
+############################
+#Convert to U, F, E Vectors#
+############################
+def getUfromPrim(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,R,cv):
+	U1 = presDomain/(R*tempDomain)
+	U2 = U1 * uVelDomain
+	U3 = U1 * vVelDomain
+	U5 = U1*(cv*tempDomain + ( (uVelDomain**2 + vVelDomain**2)**0.5) /2)
+	return U1,U2,U3,U5
+
+def getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,case):
+	# Case 1: predictor for E
+	if case ==1:
+	
+	# Case 2: predictor for F
+	elif case == 2:
+	
+	# Case 3: corrector for E
+	elif case == 3:
+	
+	# Case 4: corrector for F
+	elif case == 4:
+	
+	else:
+		print('ERROR:No case selected. Must be 1, 2, 3, or 4')
+	return F1,E2,E3,E4
+
 #####################
 #Boundary Conditions#
 #####################
@@ -35,7 +63,7 @@ def initBoundaryCond(presDomain,tempDomain,uVelDomain,vVelDomain,tempWall):
 	tempDomain[-1,1:-1] = 2*tempDomain[-1,1:-1] - tempDomain[-1,1:-1]
 	uVelDomain[-1,1:-1] = 2*uVelDomain[-1,1:-1] - uVelDomain[-1,1:-1]
 	vVelDomain[-1,1:-1] = 2*vVelDomain[-1,1:-1] - vVelDomain[-1,1:-1]
-	return presDomain,tempDomain,uVelDomain,vVelDomain
+	return tauxy
 
 ########################
 #Time Step Calculations#
@@ -56,13 +84,26 @@ def calcTimeStep(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,deltax,del
 ##################
 def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain):
 	"""
-	We will be usning the MacCormack method to sove the 
+	We will be using the MacCormack method to solve the 
 	Navier-Stokes equation. 
 	"""
-	# Calculate U vector for all points
-	U1,U2,U3 = getUfromPrim(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain)
+	# Calculate tau for predictor both F and E
+	tauxyE = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,1)
+	tauxyF = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,2)
+	tauxxE = 
+	tauyyF = 
+	E1,E2,E3,E5 = getE()
+	F1,F2,F3,F5 = getF()
 	
 	
+	
+	# Calculate tau for corrector both F and E
+	tauxyE = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,3)
+	tauxyF = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,4)
+	tauxxE = 
+	tauyyF = 
+	E1,E2,E3,E5 = getE()
+	F1,F2,F3,F5 = getF()
 	return presDomain,tempDomain,uVelDomain,vVelDomain
 
 #############
@@ -77,7 +118,7 @@ def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K):
 	girdPtsX    - Nodes in x
 	girdPtsY    - Nodes in y
 	machInf     - Inlet mach number
-	TwTInf      - Relationship of wall temp over freestream 
+	TwTInf      - Relationship of wall temp over free stream 
 	iters       - iterations to complete
 	K           - Courant number
 	**TO DO: set value for desired residual remove iters**
@@ -112,7 +153,7 @@ def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K):
 	deltay = heightOfGrid/(girdPtsY-1)
 	print('Delta in x: ',deltax,'\nDelta in y: ',deltay)
 
-	# Initialize freestream
+	# Initialize free stream
 	presDomain = np.ones([girdPtsX,girdPtsY])*pressureInf
 	tempDomain = np.ones([girdPtsX,girdPtsY])*tempInf
 	uVelDomain = np.ones([girdPtsX,girdPtsY])*uVelInf
@@ -126,18 +167,22 @@ def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K):
 
 	# Begin Simulations 
 	for i in range(iters):
-		print('Time Step #',i)
-
-		# Calculate timestep
+		# Calculate time step
 		muDomain = calcMu(muRef,tempDomain,tempRef)
 		deltat = calcTimeStep(presDomain,tempDomain,uVelDomain,
 			vVelDomain,muDomain,deltax,deltay,gamma,Pr,R,K)
-		print(deltat)
 
-
+		
+		# Calculate terms for differential equation
+		U1,U2,U3,U5 = getUfromPrim(
+			presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,R,cv)
+		#Solve internal points
 		presDomain,tempDomain,uVelDomain,vVelDomain = solveFlow(
-			presDomain,tempDomain,uVelDomain,vVelDomain,muDomain)
+			presDomain,tempDomain,uVelDomain,vVelDomain,muDomain
+			U1,U2,U3,U5)
  
+		# Set BC's
+		
 		# iterate 
 
 		# check for convergence
