@@ -11,7 +11,6 @@ def calcMu(muRef,temp,tempRef):
 	"""
 	mu = muRef* ( (temp/tempRef)**(3/2) ) * ( (tempRef+110)/(temp+110) )
 	return mu
-
 ############################
 #Convert to U, F, E Vectors#
 ############################
@@ -21,7 +20,6 @@ def getUfromPrim(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,R,cv):
 	U3 = U1 * vVelDomain
 	U5 = U1 * (cv*tempDomain + (uVelDomain**2 + vVelDomain**2) / 2 )
 	return U1,U2,U3,U5
-
 def U2Prim(U1Bar,U2Bar,U3Bar,U5Bar,R,cv):
 	rho = U1Bar    
 	uVelDomain = U2Bar/U1Bar
@@ -30,13 +28,12 @@ def U2Prim(U1Bar,U2Bar,U3Bar,U5Bar,R,cv):
 	tempDomain = e/cv
 	presDomain = U1Bar*R*tempDomain
 	return presDomain,tempDomain,uVelDomain,vVelDomain
-
 def getE(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qxE,R,cv):
 	rho = presDomain/(R*tempDomain)
 	E1 = uVelDomain*rho
 	E2 = rho * uVelDomain**2 + presDomain - tauxxE
 	E3 = rho * uVelDomain * vVelDomain - tauxyE
-	Et = rho*(cv*tempDomain + ( (uVelDomain**2 + vVelDomain**2)**0.5) /2)
+	Et = rho*(cv*tempDomain + (uVelDomain**2 + vVelDomain**2) /2)
 	E5 = (Et + presDomain) * uVelDomain - uVelDomain*tauxxE - vVelDomain*tauxyE + qxE
 	return E1,E2,E3,E5
 def getF(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qyF,R,cv):
@@ -44,10 +41,9 @@ def getF(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain
 	F1 = vVelDomain*rho
 	F2 = rho * uVelDomain* vVelDomain -tauxyF
 	F3 = rho * vVelDomain**2 + presDomain - tauyyF 
-	Et = rho*(cv*tempDomain + ( (uVelDomain**2 + vVelDomain**2)**0.5) /2)
+	Et = rho*(cv*tempDomain + (uVelDomain**2 + vVelDomain**2)/2)
 	F5 = (Et + presDomain) * vVelDomain - uVelDomain*tauxyF - vVelDomain*tauyyF + qyF
 	return F1,F2,F3,F5
-
 #########################
 # Tau and q calculations#
 #########################
@@ -69,7 +65,7 @@ def getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,case,deltay,deltax):
 				if i==0: # left inlet
 					dvdx = (vVelDomain[i+1,j]-vVelDomain[i,j])/deltax
 				else: # middle and right side
-					dvdx = (vVelDomain[i,j]-vVelDomain[i,j-1])/deltax
+					dvdx = (vVelDomain[i,j]-vVelDomain[i-1,j])/deltax
 				tauxy[i,j] = muDomain[i,j]*(dudy + dvdx)
 	# Case 2: predictor for F
 	elif case == 2:
@@ -256,7 +252,6 @@ def getqyF(tempDomain,cp,muDomain,deltay,case):
 					dTdy = (tempDomain[i,j+1] - tempDomain[i,j])/deltay
 				qyF[i,j] = -((muDomain[i,j]*cp)/0.71)*dTdy	
 	return qyF
-	
 #####################
 #Boundary Conditions#
 #####################
@@ -275,27 +270,39 @@ def initBoundaryCond(presDomain,tempDomain,uVelDomain,vVelDomain,tempWall):
 	tempDomain[1:,0] = tempWall
 	uVelDomain[1:,0] = 0
 	vVelDomain[1:,0] = 0	
-	# Case 4. [-1,1:-1 Outflow
-	presDomain[-1,1:-1] = 2*presDomain[-1,1:-1] - presDomain[-1,1:-1]
-	tempDomain[-1,1:-1] = 2*tempDomain[-1,1:-1] - tempDomain[-1,1:-1]
-	uVelDomain[-1,1:-1] = 2*uVelDomain[-1,1:-1] - uVelDomain[-1,1:-1]
-	vVelDomain[-1,1:-1] = 2*vVelDomain[-1,1:-1] - vVelDomain[-1,1:-1]
+	# Case 4. [-1,1:-1] Outflow
+	presDomain[-1,1:-1] = 2*presDomain[-2,1:-1] - presDomain[-3,1:-1]
+	tempDomain[-1,1:-1] = 2*tempDomain[-2,1:-1] - tempDomain[-3,1:-1]
+	uVelDomain[-1,1:-1] = 2*uVelDomain[-2,1:-1] - uVelDomain[-3,1:-1]
+	vVelDomain[-1,1:-1] = 2*vVelDomain[-2,1:-1] - vVelDomain[-3,1:-1]
 	return presDomain,tempDomain,uVelDomain,vVelDomain
-
+def updateBoundaryCond(presDomain,tempDomain,uVelDomain,vVelDomain):
+	"""
+	Inflow and top BC's do not change
+	Wall u, v and T do not change but pressure does
+	Outflow all values float
+	"""
+	# Wall 
+	presDomain[1:,0] = 2*presDomain[1:,1] - presDomain[1:,2]
+	# Outflow
+	presDomain[-1,1:-1] = 2*presDomain[-2,1:-1] - presDomain[-3,1:-1]
+	tempDomain[-1,1:-1] = 2*tempDomain[-2,1:-1] - tempDomain[-3,1:-1]
+	uVelDomain[-1,1:-1] = 2*uVelDomain[-2,1:-1] - uVelDomain[-3,1:-1]
+	vVelDomain[-1,1:-1] = 2*vVelDomain[-2,1:-1] - vVelDomain[-3,1:-1]
+	return presDomain,tempDomain,uVelDomain,vVelDomain
 ########################
 #Time Step Calculations#
 ########################
 def calcTimeStep(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,deltax,deltay,gamma,Pr,R,K):
 	rhoDomain = presDomain/(R*tempDomain)
 	vPrime =( (4/3) * muDomain * (gamma * muDomain/Pr) ) / rhoDomain
-	vPrime = vPrime.max()
+	vPrime = vPrime.max() 
 	a = (gamma*R*tempDomain)**0.5
 	deltatCFL =( (abs(uVelDomain)/deltax) + (abs(vVelDomain)/deltay) +
 		a * ( (1/deltax**2) + (1/deltay**2) )**0.5 
-		+ 2* vPrime*((1/deltax**2)+(1/deltay**2)) ) **-1
+		+ 2* vPrime*((1/deltax**2)+(1/deltay**2)) ) ** -1
 	deltat = K*deltatCFL.min()
 	return deltat
-
 ###############################
 #Predictor and Corrector Steps#
 ###############################
@@ -308,20 +315,42 @@ def predictor(U1,U2,U3,U5,E1,E2,E3,E5,F1,F2,F3,F5,deltat,deltax,deltay):
 	# Loop through all innner nodes
 	for i in range(0,xMax):
 		for j in range(0,yMax):
+			# Boundary nodes are just carried over
 			if i==0 or i==xMax-1 or j==0 or j==yMax-1:
 				U1Bar[i,j] = U1[i,j]*1 
 				U2Bar[i,j] = U2[i,j]*1
 				U3Bar[i,j] = U3[i,j]*1
 				U5Bar[i,j] = U5[i,j]*1
+			# Inner nodes are calculated
 			else:
 				U1Bar[i,j] = U1[i,j] - (deltat/deltax)*(E1[i+1,j]-E1[i,j]) - (deltat/deltay)*(F1[i,j+1]-F1[i,j])
 				U2Bar[i,j] = U2[i,j] - (deltat/deltax)*(E2[i+1,j]-E2[i,j]) - (deltat/deltay)*(F2[i,j+1]-F2[i,j])
 				U3Bar[i,j] = U3[i,j] - (deltat/deltax)*(E3[i+1,j]-E3[i,j]) - (deltat/deltay)*(F3[i,j+1]-F3[i,j])
 				U5Bar[i,j] = U5[i,j] - (deltat/deltax)*(E5[i+1,j]-E5[i,j]) - (deltat/deltay)*(F5[i,j+1]-F5[i,j])
 	return U1Bar,U2Bar,U3Bar,U5Bar
+
 def corrector(U1,U2,U3,U5,U1Bar,U2Bar,U3Bar,U5Bar,E1Bar,E2Bar,E3Bar,E5Bar,F1Bar,F2Bar,F3Bar,F5Bar,deltat,deltax,deltay):
-	U1,U2,U3,U5 = [1,2,3,5]
-	return U1,U2,U3,U5
+	xMax,yMax = U1.shape
+	U1New = np.zeros(U1.shape)
+	U2New = np.zeros(U1.shape)
+	U3New = np.zeros(U1.shape)
+	U5New = np.zeros(U1.shape)
+	# Loop through all innner nodes
+	for i in range(0,xMax):
+		for j in range(0,yMax):
+			# Boundary nodes are just carried over
+			if i==0 or i==xMax-1 or j==0 or j==yMax-1:
+				U1New[i,j] = U1Bar[i,j]*1 
+				U2New[i,j] = U2Bar[i,j]*1
+				U3New[i,j] = U3Bar[i,j]*1
+				U5New[i,j] = U5Bar[i,j]*1
+			# Inner nodes are calculated
+			else:
+				U1New[i,j] = 0.5*( U1[i,j] + U1Bar[i,j] - (deltat/deltax)*(E1Bar[i,j]-E1Bar[i-1,j]) - (deltat/deltay)*(F1Bar[i,j]-F1Bar[i,j-1])  )
+				U2New[i,j] = 0.5*( U2[i,j] + U2Bar[i,j] - (deltat/deltax)*(E2Bar[i,j]-E2Bar[i-1,j]) - (deltat/deltay)*(F2Bar[i,j]-F2Bar[i,j-1])  )
+				U3New[i,j] = 0.5*( U3[i,j] + U3Bar[i,j] - (deltat/deltax)*(E3Bar[i,j]-E3Bar[i-1,j]) - (deltat/deltay)*(F3Bar[i,j]-F3Bar[i,j-1])  )
+				U5New[i,j] = 0.5*( U5[i,j] + U5Bar[i,j] - (deltat/deltax)*(E5Bar[i,j]-E5Bar[i-1,j]) - (deltat/deltay)*(F5Bar[i,j]-F5Bar[i,j-1])  )
+	return U1New,U2New,U3New,U5New
 ##################
 #Iteration Scheme#
 ##################
@@ -333,8 +362,7 @@ def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,deltat,deltay
 	################
 	#Predictor Step#
 	################
-	# Calculate tau for predictor both F and E
-
+	# Calculate tau and q for predictor both F and E
 	tauxyE = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,1,deltay,deltax) # predictor for E values (case1:getTauxyfromPrim)
 	tauxyF = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,2,deltay,deltax) # predictor for F values (case2:getTauxyfromPrim)
 	tauxxE = getTauxx(uVelDomain,vVelDomain,muDomain,1,deltay,deltax) # predictor for E values (case1:getTauxx)
@@ -349,12 +377,12 @@ def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,deltat,deltay
 	U1Bar,U2Bar,U3Bar,U5Bar = predictor(U1,U2,U3,U5,E1,E2,E3,E5,F1,F2,F3,F5,deltat,deltax,deltay)
 	# Extract primitives
 	presDomain,tempDomain,uVelDomain,vVelDomain = U2Prim(U1Bar,U2Bar,U3Bar,U5Bar,R,cv)
-	# Enforce BC's
+	# Update BC's
+	presDomain,tempDomain,uVelDomain,vVelDomain = updateBoundaryCond(presDomain,tempDomain,uVelDomain,vVelDomain) 
 	################
 	#Corrector Step#
 	################
-	muDomain = muRef* ( (tempDomain/tempRef)**(3/2) ) * ( (tempRef+110)/(tempDomain+110) )
-	# muDomain = calcMu(muRef,tempDomain,tempRef) # Recalculate mu base on predicted temp
+	muDomain = calcMu(muRef,tempDomain,tempRef) # Recalculate mu base on predicted temp
 	tauxyE = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,3,deltay,deltax) # corrector for E values (case3:getTauxyfromPrim)
 	tauxyF = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,4,deltay,deltax) # corrector for F values (case4:getTauxyfromPrim)
 	tauxxE = getTauxx(uVelDomain,vVelDomain,muDomain,2,deltay,deltax) # corrector for E values (case2:getTauxx)
@@ -364,16 +392,16 @@ def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,deltat,deltay
 	U1Bar,U2Bar,U3Bar,U5Bar = getUfromPrim(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,R,cv)
 	E1Bar,E2Bar,E3Bar,E5Bar = getE(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qxE,R,cv)
 	F1Bar,F2Bar,F3Bar,F5Bar = getF(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qyF,R,cv)
-	
-	# corrector(U1,U2,U3,U5,U1Bar,U2Bar,U3Bar,U5Bar,E1Bar,E2Bar,E3Bar,E5Bar,F1Bar,F2Bar,F3Bar,F5Bar,deltat,deltax,deltay)
-
-
+	# Rearward step
+	U1New,U2New,U3New,U5New =  corrector(U1,U2,U3,U5,U1Bar,U2Bar,U3Bar,U5Bar,E1Bar,E2Bar,E3Bar,E5Bar,F1Bar,F2Bar,F3Bar,F5Bar,deltat,deltax,deltay)
+	presDomain,tempDomain,uVelDomain,vVelDomain = U2Prim(U1New,U2New,U3New,U5New,R,cv)
+	# Update BC's
+	presDomain,tempDomain,uVelDomain,vVelDomain = updateBoundaryCond(presDomain,tempDomain,uVelDomain,vVelDomain) 
 	return presDomain,tempDomain,uVelDomain,vVelDomain
-
 #############
 #MAIN SCRIPT#
 #############
-def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K):
+def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K):
 	"""
 	This program uses an iterative method to solve
 	the full Navier-Stokes equation for super sonic
@@ -385,9 +413,7 @@ def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K):
 	TwTInf      - Relationship of wall temp over free stream 
 	iters       - iterations to complete
 	K           - Courant number
-	**TO DO: set value for desired residual remove iters**
 	"""
-
 	# Set flow/geometry parameters
 	lengthOfPlate =0.00001
 	aInf         = 340.28        # Speed of sound: m/s
@@ -426,30 +452,26 @@ def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K):
 	presDomain,tempDomain,uVelDomain,vVelDomain = initBoundaryCond(
 		presDomain,tempDomain,uVelDomain,vVelDomain,tempWall)
 
-	# Visualize initial conditions
-	#plotFlow(presDomain,tempDomain,uVelDomain,vVelDomain)
+	# Iteration Parameters
+	iteration = 1
+	residual = 1
 
 	# Begin Simulations 
-	for i in range(iters):
+	while residual > residualTarget:
+		rhoOld = presDomain/(R*tempDomain)
 		# Calculate time step
 		muDomain = calcMu(muRef,tempDomain,tempRef)
 		deltat = calcTimeStep(presDomain,tempDomain,uVelDomain,
 			vVelDomain,muDomain,deltax,deltay,gamma,Pr,R,K)
-
 		#Solve internal points
-		print('Iter: ',i,' | Max Pressure: ', presDomain.max(),' | Max Temperature: ',
-			tempDomain.max(),' | Max X-Vel: ',uVelDomain.max(),' | Max Y_Vel: ',
-			vVelDomain.max())
 		presDomain,tempDomain,uVelDomain,vVelDomain = solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,deltat,deltay,deltax,cp,cv,R,tempRef,muRef)
- 
-		# Set BC's
-		
-		# iterate 
-
-		# check for convergence
-
-	return
-
+		rhoNew = presDomain/(R*tempDomain)
+		residuals = rhoOld - rhoNew
+		residual = residuals.max()
+		print('Iter: %4.i | Residual: %.3E | Max Pressure: %.2f | Max Temperature: %.2f | Max X-Vel: %.2f | Max Y_Vel: %.2f' % (iteration,residual,presDomain.max(),tempDomain.max(),uVelDomain.max(),vVelDomain.max()))
+		iteration = iteration + 1
+	plotFlow(presDomain,tempDomain,uVelDomain,vVelDomain)
+	return 
 ####################
 #Plotting Functions#
 ####################
@@ -461,25 +483,33 @@ def plotFlow(pres,temp,uVel,vVel):
 	plt.subplot(2,2,1)
 	plt.contourf(pres.transpose())
 	plt.colorbar()
+	plt.title('Pressure')
 	plt.subplot(2,2,2)
 	plt.contourf(temp.transpose())
 	plt.colorbar()
+	plt.title('Temp')
 	plt.subplot(2,2,3)
 	plt.contourf(uVel.transpose())
 	plt.colorbar()
+	plt.title('U Vel')
 	plt.subplot(2,2,4)
 	plt.contourf(vVel.transpose())
 	plt.colorbar()
+	plt.title('V Vel')
 	plt.show()
 	return
-	
 def plotParam(param):
 	plt.figure()
 	plt.contourf(param.transpose())
 	plt.colorbar()
 	plt.show()
 	return
-
-
 #superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K)
-superVisc(70,70,4,1,1,0.6)
+superVisc(70,70,4,1,10**-8,0.6)
+
+"""
+Have one of the inputs be how many times to save the flow field (e.g. every 10 iterations)
+Output the full array of results at the end and then have a processing function
+Convergence run or residual run
+Print residual 
+"""
