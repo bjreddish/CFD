@@ -1,6 +1,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt
-
+import pdb
 ################
 #mu Calculation#
 ################
@@ -12,7 +12,6 @@ def calcMu(muRef,temp,tempRef):
 	mu = muRef* ( (temp/tempRef)**(3/2) ) * ( (tempRef+110)/(temp+110) )
 	return mu
 
-	
 ############################
 #Convert to U, F, E Vectors#
 ############################
@@ -20,10 +19,38 @@ def getUfromPrim(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,R,cv):
 	U1 = presDomain/(R*tempDomain)
 	U2 = U1 * uVelDomain
 	U3 = U1 * vVelDomain
-	U5 = U1*(cv*tempDomain + ( (uVelDomain**2 + vVelDomain**2)**0.5) /2)
+	U5 = U1 * (cv*tempDomain + (uVelDomain**2 + vVelDomain**2) / 2 )
 	return U1,U2,U3,U5
-#####
-# Tau Calculations
+
+def U2Prim(U1Bar,U2Bar,U3Bar,U5Bar,R,cv):
+	rho = U1Bar    
+	uVelDomain = U2Bar/U1Bar
+	vVelDomain = U3Bar/U1Bar
+	e =   (U5Bar/U1Bar) - ( (uVelDomain**2) + (vVelDomain**2) )/2 
+	tempDomain = e/cv
+	presDomain = U1Bar*R*tempDomain
+	return presDomain,tempDomain,uVelDomain,vVelDomain
+
+def getE(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qxE,R,cv):
+	rho = presDomain/(R*tempDomain)
+	E1 = uVelDomain*rho
+	E2 = rho * uVelDomain**2 + presDomain - tauxxE
+	E3 = rho * uVelDomain * vVelDomain - tauxyE
+	Et = rho*(cv*tempDomain + ( (uVelDomain**2 + vVelDomain**2)**0.5) /2)
+	E5 = (Et + presDomain) * uVelDomain - uVelDomain*tauxxE - vVelDomain*tauxyE + qxE
+	return E1,E2,E3,E5
+def getF(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qyF,R,cv):
+	rho = presDomain/(R*tempDomain)
+	F1 = vVelDomain*rho
+	F2 = rho * uVelDomain* vVelDomain -tauxyF
+	F3 = rho * vVelDomain**2 + presDomain - tauyyF 
+	Et = rho*(cv*tempDomain + ( (uVelDomain**2 + vVelDomain**2)**0.5) /2)
+	F5 = (Et + presDomain) * vVelDomain - uVelDomain*tauxyF - vVelDomain*tauyyF + qyF
+	return F1,F2,F3,F5
+
+#########################
+# Tau and q calculations#
+#########################
 def getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,case,deltay,deltax):
 	xMax,yMax = uVelDomain.shape
 	tauxy = np.zeros(uVelDomain.shape)
@@ -97,21 +124,138 @@ def getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,case,deltay,deltax):
 				tauxy[i,j] = muDomain[i,j]*(dudy + dvdx)
 	else:
 		print('ERROR:No case selected. Must be 1, 2, 3, or 4')
-	print(tauxy)
 	return tauxy
-def getTauxx():
+def getTauxx(uVelDomain,vVelDomain,muDomain,case,deltay,deltax):
 	# Calculate Tauxx for predictor
-	
-	# Calculate Tauxx for corrector
-	return
+	xMax,yMax = uVelDomain.shape
+	tauxx = np.zeros(uVelDomain.shape)
+	# Case 1: predictor for E
+	if case ==1:
+		for i in range(0,xMax):
+			for j in range(0,yMax):
+				# Calculate dvdy with central diff
+				if j==0:# Wall
+					dvdy = (vVelDomain[i,j+1]-vVelDomain[i,j])/deltay
+				elif j == yMax-1: # top
+					dvdy = (vVelDomain[i,j]-vVelDomain[i,j-1])/deltay
+				else:# j values between top and bottom
+					dvdy = (vVelDomain[i,j+1]-vVelDomain[i,j-1])/(2*deltay)
 
-def getTauyy():
-	# Calculate Tauxx for predictor
-	
+				# Calculate dudx with rearward diff
+				if i==0: # left inlet
+					dudx = (uVelDomain[i+1,j]-uVelDomain[i,j])/deltax
+				else: # middle and right side
+					dudx = (uVelDomain[i,j]-uVelDomain[i-1,j])/deltax
+				tauxx[i,j] = -(2/3) * muDomain[i,j] * (dudx + dvdy) + 2 * muDomain[i,j] * dudx
+	# Case 2: corrector for E
+	elif case == 2:
+		for i in range(0,xMax):
+			for j in range(0,yMax):
+				# Calculate dvdy with central diff
+				if j==0:# Wall
+					dvdy = (vVelDomain[i,j+1]-vVelDomain[i,j])/deltay
+				elif j == yMax-1: # top
+					dvdy = (vVelDomain[i,j]-vVelDomain[i,j-1])/deltay
+				else:# j values between top and bottom
+					dvdy = (vVelDomain[i,j+1]-vVelDomain[i,j-1])/(2*deltay)
+
+				# Calculate dudx with forward diff
+				if i==xMax-1: # right outlet
+					dudx = (uVelDomain[i,j]-uVelDomain[i-1,j])/deltax
+				else: # middle and right side
+					dudx = (uVelDomain[i+1,j]-uVelDomain[i,j])/deltax
+				tauxx[i,j] = -(2/3) * muDomain[i,j] * (dudx + dvdy) + 2 * muDomain[i,j] * dudx
 	# Calculate Tauxx for corrector
-	return
-	
-	
+	return tauxx
+def getTauyy(uVelDomain,vVelDomain,muDomain,case,deltay,deltax):
+	xMax,yMax = uVelDomain.shape
+	tauyy = np.zeros(uVelDomain.shape)
+	# Calculate tauyy for predictor
+	if case == 1:
+		for i in range(0,xMax):
+			for j in range(0,yMax):
+				# Calculate dvdy with rearward
+				if j ==0: # if we are at the wall then we cannot do rearward diff
+					dvdy = (vVelDomain[i,j+1]-vVelDomain[i,j])/deltay
+				else: #rearward diff
+					dvdy = (vVelDomain[i,j] - vVelDomain[i,j-1])/deltay
+
+				# Calculate dudx with central diff
+				if i ==0:
+					dudx = (uVelDomain[i+1,j]-uVelDomain[i,j])/deltax
+				elif i == xMax-1:
+					dudx = (uVelDomain[i,j]-uVelDomain[i-1,j])/deltax
+				else:
+					dudx = (uVelDomain[i+1,j]-uVelDomain[i-1,j])/(2*deltax)
+				tauyy[i,j] = -(2/3) * muDomain[i,j] * (dudx + dvdy) + 2 * muDomain[i,j] * dvdy
+
+	# Calculate tauyy for corrector
+	elif case == 2:
+		for i in range(0,xMax):
+			for j in range(0,yMax):
+				# Calculate dvdy with forward diff
+				if j ==yMax-1: # outlet
+					dvdy = (vVelDomain[i,j]-vVelDomain[i,j-1])/deltay
+				else: #forward diff
+					dvdy = (vVelDomain[i,j+1] - vVelDomain[i,j])/deltay
+
+				# Calculate dudx with central diff
+				if i ==0:
+					dudx = (uVelDomain[i+1,j]-uVelDomain[i,j])/deltax
+				elif i == xMax-1:
+					dudx = (uVelDomain[i,j]-uVelDomain[i-1,j])/deltax
+				else:
+					dudx = (uVelDomain[i+1,j]-uVelDomain[i-1,j])/(2*deltax)
+				tauyy[i,j] = -(2/3) * muDomain[i,j] * (dudx + dvdy) + 2 * muDomain[i,j] * dvdy
+	return tauyy
+def getqxE(tempDomain,cp,muDomain,deltax,case):
+	xMax,yMax = tempDomain.shape
+	qxE = np.zeros(tempDomain.shape)
+	# Case 1: predictor for E
+	if case ==1:
+		for i in range(0,xMax):
+			for j in range(0,yMax):
+				# Calculate dudx with rearward diff
+				if i==0: # left inlet
+					dTdx = (tempDomain[i+1,j]-tempDomain[i,j])/deltax
+				else: # middle and right side
+					dTdx = (tempDomain[i,j]-tempDomain[i-1,j])/deltax
+				qxE[i,j] = -((muDomain[i,j]*cp)/0.71)*dTdx			
+	# Case 2: corrector for E
+	elif case == 2:
+		for i in range(0,xMax):
+			for j in range(0,yMax):
+				# Calculate dudx with forward diff
+				if i==xMax-1: # right outlet
+					dTdx = (tempDomain[i,j]-tempDomain[i-1,j])/deltax
+				else: # middle and right side
+					dTdx = (tempDomain[i+1,j]-tempDomain[i,j])/deltax	
+				qxE[i,j] = -((muDomain[i,j]*cp)/0.71)*dTdx	
+	return qxE
+def getqyF(tempDomain,cp,muDomain,deltay,case):
+	xMax,yMax = tempDomain.shape
+	qyF = np.zeros(tempDomain.shape)
+	# Predictor step
+	if case == 1:
+		for i in range(0,xMax):
+			for j in range(0,yMax):
+				# Calculate dvdy with rearward
+				if j ==0: # if we are at the wall then we cannot do rearward diff
+					dTdy = (tempDomain[i,j+1]-tempDomain[i,j])/deltay
+				else: #rearward diff
+					dTdy = (tempDomain[i,j] - tempDomain[i,j-1])/deltay
+				qyF[i,j] = -((muDomain[i,j]*cp)/0.71)*dTdy	
+	# Corrector step calculation
+	elif case == 2:
+		for i in range(0,xMax):
+			for j in range(0,yMax):
+				# Calculate dvdy with forward diff
+				if j ==yMax-1: # outlet
+					dTdy = (tempDomain[i,j]-tempDomain[i,j-1])/deltay
+				else: #forward diff
+					dTdy = (tempDomain[i,j+1] - tempDomain[i,j])/deltay
+				qyF[i,j] = -((muDomain[i,j]*cp)/0.71)*dTdy	
+	return qyF
 	
 #####################
 #Boundary Conditions#
@@ -152,31 +296,78 @@ def calcTimeStep(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,deltax,del
 	deltat = K*deltatCFL.min()
 	return deltat
 
+###############################
+#Predictor and Corrector Steps#
+###############################
+def predictor(U1,U2,U3,U5,E1,E2,E3,E5,F1,F2,F3,F5,deltat,deltax,deltay):
+	xMax,yMax = U1.shape
+	U1Bar = np.zeros(U1.shape)
+	U2Bar = np.zeros(U1.shape)
+	U3Bar = np.zeros(U1.shape)
+	U5Bar = np.zeros(U1.shape)
+	# Loop through all innner nodes
+	for i in range(0,xMax):
+		for j in range(0,yMax):
+			if i==0 or i==xMax-1 or j==0 or j==yMax-1:
+				U1Bar[i,j] = U1[i,j]*1 
+				U2Bar[i,j] = U2[i,j]*1
+				U3Bar[i,j] = U3[i,j]*1
+				U5Bar[i,j] = U5[i,j]*1
+			else:
+				U1Bar[i,j] = U1[i,j] - (deltat/deltax)*(E1[i+1,j]-E1[i,j]) - (deltat/deltay)*(F1[i,j+1]-F1[i,j])
+				U2Bar[i,j] = U2[i,j] - (deltat/deltax)*(E2[i+1,j]-E2[i,j]) - (deltat/deltay)*(F2[i,j+1]-F2[i,j])
+				U3Bar[i,j] = U3[i,j] - (deltat/deltax)*(E3[i+1,j]-E3[i,j]) - (deltat/deltay)*(F3[i,j+1]-F3[i,j])
+				U5Bar[i,j] = U5[i,j] - (deltat/deltax)*(E5[i+1,j]-E5[i,j]) - (deltat/deltay)*(F5[i,j+1]-F5[i,j])
+	return U1Bar,U2Bar,U3Bar,U5Bar
+def corrector(U1,U2,U3,U5,U1Bar,U2Bar,U3Bar,U5Bar,E1Bar,E2Bar,E3Bar,E5Bar,F1Bar,F2Bar,F3Bar,F5Bar,deltat,deltax,deltay):
+	U1,U2,U3,U5 = [1,2,3,5]
+	return U1,U2,U3,U5
 ##################
 #Iteration Scheme#
 ##################
-def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,U1,U2,U3,U5,deltay,deltax):
+def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,deltat,deltay,deltax,cp,cv,R,tempRef,muRef):
 	"""
 	We will be using the MacCormack method to solve the 
 	Navier-Stokes equation. 
 	"""
+	################
+	#Predictor Step#
+	################
 	# Calculate tau for predictor both F and E
-	tauxyE = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,1,deltay,deltax)
-	tauxyF = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,2,deltay,deltax)
-	#tauxxE = 1
-	#tauyyF = 2
-	#E1,E2,E3,E5 = getE()
-	#F1,F2,F3,F5 = getF()
+
+	tauxyE = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,1,deltay,deltax) # predictor for E values (case1:getTauxyfromPrim)
+	tauxyF = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,2,deltay,deltax) # predictor for F values (case2:getTauxyfromPrim)
+	tauxxE = getTauxx(uVelDomain,vVelDomain,muDomain,1,deltay,deltax) # predictor for E values (case1:getTauxx)
+	tauyyF = getTauyy(uVelDomain,vVelDomain,muDomain,1,deltay,deltax) # predictor for F values (case1:getTauyy)
+	qxE = getqxE(tempDomain,cp,muDomain,deltax,1) # predictor for E values (case1:getqxE)
+	qyF = getqyF(tempDomain,cp,muDomain,deltay,1) # predictor for F values (case1:getqyF)
+	# Calculate the values for U, E and F arrays
+	U1,U2,U3,U5 = getUfromPrim(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,R,cv)
+	E1,E2,E3,E5 = getE(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qxE,R,cv)
+	F1,F2,F3,F5 = getF(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qyF,R,cv)
+	# Calculate predictor step
+	U1Bar,U2Bar,U3Bar,U5Bar = predictor(U1,U2,U3,U5,E1,E2,E3,E5,F1,F2,F3,F5,deltat,deltax,deltay)
+	# Extract primitives
+	presDomain,tempDomain,uVelDomain,vVelDomain = U2Prim(U1Bar,U2Bar,U3Bar,U5Bar,R,cv)
+	# Enforce BC's
+	################
+	#Corrector Step#
+	################
+	muDomain = muRef* ( (tempDomain/tempRef)**(3/2) ) * ( (tempRef+110)/(tempDomain+110) )
+	# muDomain = calcMu(muRef,tempDomain,tempRef) # Recalculate mu base on predicted temp
+	tauxyE = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,3,deltay,deltax) # corrector for E values (case3:getTauxyfromPrim)
+	tauxyF = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,4,deltay,deltax) # corrector for F values (case4:getTauxyfromPrim)
+	tauxxE = getTauxx(uVelDomain,vVelDomain,muDomain,2,deltay,deltax) # corrector for E values (case2:getTauxx)
+	tauyyF = getTauyy(uVelDomain,vVelDomain,muDomain,2,deltay,deltax) # corrector for F values (case2:getTauyy)
+	qxE = getqxE(tempDomain,cp,muDomain,deltax,2)
+	qyF = getqyF(tempDomain,cp,muDomain,deltay,2)
+	U1Bar,U2Bar,U3Bar,U5Bar = getUfromPrim(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,R,cv)
+	E1Bar,E2Bar,E3Bar,E5Bar = getE(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qxE,R,cv)
+	F1Bar,F2Bar,F3Bar,F5Bar = getF(tauxyE,tauxyF,tauxxE,tauyyF,presDomain,tempDomain,uVelDomain,vVelDomain,qyF,R,cv)
 	
-	
-	
-	# Calculate tau for corrector both F and E
-	tauxyE = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,3,deltay,deltax)
-	tauxyF = getTauxyfromPrim(uVelDomain,vVelDomain,muDomain,4,deltay,deltax)
-	#tauxxE = 1
-	#tauyyF = 2
-	#E1,E2,E3,E5 = getE()
-	#F1,F2,F3,F5 = getF()
+	# corrector(U1,U2,U3,U5,U1Bar,U2Bar,U3Bar,U5Bar,E1Bar,E2Bar,E3Bar,E5Bar,F1Bar,F2Bar,F3Bar,F5Bar,deltat,deltax,deltay)
+
+
 	return presDomain,tempDomain,uVelDomain,vVelDomain
 
 #############
@@ -224,7 +415,7 @@ def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K):
 	delta = (5*lengthOfPlate)/(ReL**.5)
 	heightOfGrid = 5*delta
 	deltay = heightOfGrid/(girdPtsY-1)
-	print('Delta in x: ',deltax,'\nDelta in y: ',deltay)
+	print('GRID DIMENSIONS','\nDelta in x: ',deltax,'\nDelta in y: ',deltay)
 
 	# Initialize free stream
 	presDomain = np.ones([girdPtsX,girdPtsY])*pressureInf
@@ -245,14 +436,11 @@ def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K):
 		deltat = calcTimeStep(presDomain,tempDomain,uVelDomain,
 			vVelDomain,muDomain,deltax,deltay,gamma,Pr,R,K)
 
-		
-		# Calculate terms for differential equation
-		U1,U2,U3,U5 = getUfromPrim(
-			presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,R,cv)
 		#Solve internal points
-		presDomain,tempDomain,uVelDomain,vVelDomain = solveFlow(
-			presDomain,tempDomain,uVelDomain,vVelDomain,muDomain
-			,U1,U2,U3,U5,deltay,deltax)
+		print('Iter: ',i,' | Max Pressure: ', presDomain.max(),' | Max Temperature: ',
+			tempDomain.max(),' | Max X-Vel: ',uVelDomain.max(),' | Max Y_Vel: ',
+			vVelDomain.max())
+		presDomain,tempDomain,uVelDomain,vVelDomain = solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,deltat,deltay,deltax,cp,cv,R,tempRef,muRef)
  
 		# Set BC's
 		
@@ -292,4 +480,6 @@ def plotParam(param):
 	plt.show()
 	return
 
+
+#superVisc(girdPtsX,girdPtsY,machInf,TwTInf,iters,K)
 superVisc(70,70,4,1,1,0.6)
