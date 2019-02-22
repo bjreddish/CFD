@@ -476,9 +476,9 @@ def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K):
 
 	# Iteration Parameters
 	iteration = 1
-	residual = 1
+	residual = np.array([.1])
 	# Begin Simulations 
-	while residual > residualTarget:
+	while residual[iteration-1] > residualTarget:
 		rhoOld = presDomain/(R*tempDomain)
 		# Calculate time step
 		muDomain = calcMu(muRef,tempDomain,tempRef)
@@ -490,12 +490,12 @@ def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K):
 			deltat,deltay,deltax,cp,cv,R,tempRef,muRef)
 		rhoNew = presDomain/(R*tempDomain)
 		residuals = rhoOld - rhoNew
-		residual = residuals.max()
+		residual = np.append(residual,residuals.max())
 		print(
 			'Iter: %4.i | Residual: %.3E | Max Pressure: %.2f | Max Temperature: %.2f | Max X-Vel: %.2f | Max Y_Vel: %.2f'
-			 % (iteration,residual,presDomain.max(),tempDomain.max(),uVelDomain.max(),vVelDomain.max()))
+			 % (iteration,residual[iteration],presDomain.max(),tempDomain.max(),uVelDomain.max(),vVelDomain.max()))
 		iteration = iteration + 1
-	return presDomain,tempDomain,uVelDomain,vVelDomain
+	return presDomain,tempDomain,uVelDomain,vVelDomain,residual
 ####################
 #Plotting Functions#
 ####################
@@ -543,8 +543,11 @@ def main():
 	corantNumber = 0.6
 	lengthOfPlate =0.00001
 	# Run main CFD code
-	presDomain,tempDomain,uVelDomain,vVelDomain = superVisc(
+	presDomain,tempDomain,uVelDomain,vVelDomain,residual = superVisc(
 		lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,corantNumber)
+	# Residual Plot
+	plt.plot(residual)
+	plt.show()	
 	# Preview Flow
 	plotFlow(presDomain,tempDomain,uVelDomain,vVelDomain)
 	# Save data
@@ -556,6 +559,7 @@ def main():
 		h5f.create_dataset('temp', data=tempDomain)
 		h5f.create_dataset('u', data=uVelDomain)
 		h5f.create_dataset('v', data=vVelDomain)
+		h5f.create_dataset('residual', data=residual)
 		h5f.close()
 		print(fileName, 'saved')
 	pass

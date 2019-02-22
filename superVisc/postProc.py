@@ -33,18 +33,21 @@ def plotFlow(pres,temp,uVel,vVel):
 	plt.title('V Vel')
 	plt.show()
 	return
-
 filename = 'baseCase.h5'
 f = h5py.File(filename, 'r')
-
 # List all groups
 presKey = list(f.keys())[0]
-tempKey = list(f.keys())[1]
-uKey = list(f.keys())[2]
-vKey = list(f.keys())[3]
+tempKey = list(f.keys())[2]
+uKey = list(f.keys())[3]
+vKey = list(f.keys())[4]
+residualKey = list(f.keys())[1]
+print(list(f.keys())[:])
 # Get the data
 presDomain = f[presKey][:,:]
 tempDomain = f[tempKey][:,:]
 uVelDomain = f[uKey][:,:]
 vVelDomain = f[vKey][:,:]
+residualKey = f[residualKey][:]
 plotFlow(presDomain,tempDomain,uVelDomain,vVelDomain)
+plt.plot(residual)
+plt.show()
