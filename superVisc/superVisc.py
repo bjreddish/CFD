@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 import pdb
+import h5py
 ################
 #mu Calculation#
 ################
@@ -423,7 +424,7 @@ def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,
 #############
 #MAIN SCRIPT#
 #############
-def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K):
+def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K):
 	"""
 	This program uses an iterative method to solve
 	the full Navier-Stokes equation for super sonic
@@ -437,7 +438,6 @@ def superVisc(girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K):
 	K           - Courant number
 	"""
 	# Set flow/geometry parameters
-	lengthOfPlate =0.00001
 	aInf         = 340.28        # Speed of sound: m/s
 	pressureInf  = 101325.0      # Pressure N/m^2
 	tempInf      = 288.16        # Kelvin
@@ -535,17 +535,29 @@ def plotParam(param):
 
 def main():
 	# User Input
-	girdPtsX=100
-	girdPtsY=100
+	girdPtsX=80
+	girdPtsY=80
 	machInf=4
 	TwTInf=1
-	residualTarget=10**-8
+	residualTarget=10**-1
 	corantNumber = 0.6
 	outputIters = 20
+	lengthOfPlate =0.00001
 	# Run main CFD code
 	presDomain,tempDomain,uVelDomain,vVelDomain = superVisc(
-		girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,corantNumber)
-	# Post-processing
+		lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,corantNumber)
+	# Preview Flow
 	plotFlow(presDomain,tempDomain,uVelDomain,vVelDomain)
+	# Save data
+	save = input('Save? (y/n)')
+	if save == 'y':
+		fileName = input('File Name:') + '.h5'
+		h5f = h5py.File(fileName, 'w')
+		h5f.create_dataset('pres', data=presDomain)
+		h5f.create_dataset('temp', data=tempDomain)
+		h5f.create_dataset('u', data=uVelDomain)
+		h5f.create_dataset('v', data=vVelDomain)
+		h5f.close()
+		print(fileName, 'saved')
 	pass
 main()
