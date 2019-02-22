@@ -535,13 +535,12 @@ def plotParam(param):
 
 def main():
 	# User Input
-	girdPtsX=80
-	girdPtsY=80
+	girdPtsX=70
+	girdPtsY=70
 	machInf=4
 	TwTInf=1
-	residualTarget=10**-1
+	residualTarget=10**-8
 	corantNumber = 0.6
-	outputIters = 20
 	lengthOfPlate =0.00001
 	# Run main CFD code
 	presDomain,tempDomain,uVelDomain,vVelDomain = superVisc(
