@@ -120,7 +120,7 @@ psum2 = (presDomain2[:,0].sum()*deltax2)
 psum3 = (presDomain3[:,0].sum()*deltax3)
 psum4 = (presDomain4[:,0].sum()*deltax4)
 
-
+# change in pressure on plate N/m^2
 d1 = psum2-psum1
 d2 = psum3-psum2
 d3 = psum4-psum3
@@ -128,8 +128,15 @@ print(abs(d1))
 print(abs(d2))
 print(abs(d3))
 
+#max pressures
+print(presDomain1.max())
+print(presDomain2.max())
+print(presDomain3.max())
+print(presDomain4.max())
+
+
 plt.legend()
 plt.grid(True)
 plt.xlabel('Pressure')
 plt.ylabel('y Location')
-# plt.show()
+plt.show()
