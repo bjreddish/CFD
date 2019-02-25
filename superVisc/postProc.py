@@ -3,51 +3,70 @@ import matplotlib.pyplot as plt
 import h5py
 
 
-def plotFlow(pres,temp,uVel,vVel):
+def plotFlow(x,y,pres,temp,uVel,vVel):
 	"""
 	Plotting script to show flowfiled 
 	"""
+	# Create mesh for points
+	X, Y = np.meshgrid(x, y)
 	# Pressure
 	plt.figure(1)
 	# plt.subplot(2,2,1)
-	plt.contourf(pres.transpose())
+	plt.contourf(X,Y,pres.transpose())
 	plt.colorbar(label='N/m^2')
+	plt.xlabel('x(m)')
+	plt.ylabel('y(m)')
+	plt.grid(True)
 	plt.title('Pressure')
 	# Temperature
 	plt.figure(2)
 	# plt.subplot(2,2,2)
-	plt.contourf(temp.transpose())
+	plt.contourf(X,Y,temp.transpose())
 	plt.colorbar(label='K')
+	plt.xlabel('x(m)')
+	plt.ylabel('y(m)')
+	plt.grid(True)
 	plt.title('Temp')
 	# U Vel
 	plt.figure(3)
 	# plt.subplot(2,2,3)
-	plt.contourf(uVel.transpose())
+	plt.contourf(X,Y,uVel.transpose())
 	plt.colorbar(label='m/s')
+	plt.xlabel('x(m)')
+	plt.ylabel('y(m)')
+	plt.grid(True)
 	plt.title('U Vel')
 	# V Vel
 	plt.figure(4)
 	# plt.subplot(2,2,4)
-	plt.contourf(vVel.transpose())
+	plt.contourf(X,Y,vVel.transpose())
 	plt.colorbar(label='m/s')
+	plt.xlabel('x(m)')
+	plt.ylabel('y(m)')
+	plt.grid(True)
 	plt.title('V Vel')
 	plt.show()
 	return
-filename = 'baseCase.h5'
-f = h5py.File(filename, 'r')
+
+f = h5py.File(input('File Name:'), 'r')
 # List all groups
-presKey = list(f.keys())[0]
-tempKey = list(f.keys())[2]
-uKey = list(f.keys())[3]
-vKey = list(f.keys())[4]
-residualKey = list(f.keys())[1]
-print(list(f.keys())[:])
+# print(list(f.keys())[:])
 # Get the data
-presDomain = f[presKey][:,:]
-tempDomain = f[tempKey][:,:]
-uVelDomain = f[uKey][:,:]
-vVelDomain = f[vKey][:,:]
-residualKey = f[residualKey][:]
-plotFlow(presDomain,tempDomain,uVelDomain,vVelDomain)
+presDomain = f['pres'][:,:]
+tempDomain = f['temp'][:,:]
+uVelDomain = f['u'][:,:]
+vVelDomain = f['v'][:,:]
+residual = f['residual'][:]
+lengthOfPlate = f['lengthOfPlate']
+deltax = f['deltax']
+deltay = f['deltay']
+xNodes,yNodes = presDomain.shape
+x = np.arange(xNodes)*deltax
+y = np.arange(yNodes)*deltay
+plotFlow(x,y,presDomain,tempDomain,uVelDomain,vVelDomain)
 plt.plot(residual)
+plt.grid(True)
+plt.yscale('log')
+plt.xlabel('Iterations')
+plt.ylabel('Residual')
 plt.show()

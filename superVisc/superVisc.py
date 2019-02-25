@@ -495,7 +495,7 @@ def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K):
 			'Iter: %4.i | Residual: %.3E | Max Pressure: %.2f | Max Temperature: %.2f | Max X-Vel: %.2f | Max Y_Vel: %.2f'
 			 % (iteration,residual[iteration],presDomain.max(),tempDomain.max(),uVelDomain.max(),vVelDomain.max()))
 		iteration = iteration + 1
-	return presDomain,tempDomain,uVelDomain,vVelDomain,residual
+	return presDomain,tempDomain,uVelDomain,vVelDomain,residual,deltax,deltay
 ####################
 #Plotting Functions#
 ####################
@@ -535,19 +535,23 @@ def plotParam(param):
 
 def main():
 	# User Input
-	girdPtsX=70
-	girdPtsY=70
+	girdPtsX=200
+	girdPtsY=200
 	machInf=4
 	TwTInf=1
 	residualTarget=10**-8
-	corantNumber = 0.6
+	corantNumber = 0.4
 	lengthOfPlate =0.00001
 	# Run main CFD code
-	presDomain,tempDomain,uVelDomain,vVelDomain,residual = superVisc(
+	presDomain,tempDomain,uVelDomain,vVelDomain,residual,deltax,deltay = superVisc(
 		lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,corantNumber)
 	# Residual Plot
 	plt.plot(residual)
-	plt.show()	
+	plt.grid(True)
+	plt.yscale('log')
+	plt.xlabel('Iterations')
+	plt.ylabel('Residual')
+	plt.show()
 	# Preview Flow
 	plotFlow(presDomain,tempDomain,uVelDomain,vVelDomain)
 	# Save data
@@ -560,6 +564,9 @@ def main():
 		h5f.create_dataset('u', data=uVelDomain)
 		h5f.create_dataset('v', data=vVelDomain)
 		h5f.create_dataset('residual', data=residual)
+		h5f.create_dataset('lengthOfPlate',data = lengthOfPlate)
+		h5f.create_dataset('deltax',data=deltax)
+		h5f.create_dataset('deltay',data=deltay)
 		h5f.close()
 		print(fileName, 'saved')
 	pass
