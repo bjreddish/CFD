@@ -1,7 +1,9 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 import h5py
-
+def header(msg):
+	print('-' * 50)
+	print('['+msg+']')
 
 def plotFlow(x,y,pres,temp,uVel,vVel):
 	"""
@@ -102,41 +104,104 @@ xNodes4,yNodes4 = presDomain4.shape
 x4 = np.arange(xNodes4)*deltax4
 y4 = np.arange(yNodes4)*deltay4
 
+f5 = h5py.File('280base.h5', 'r')
+presDomain5 = f5['pres'][:,:]
+tempDomain5 = f5['temp'][:,:]
+uVelDomain5 = f5['u'][:,:]
+vVelDomain5 = f5['v'][:,:]
+residual5 = f5['residual'][:]
+lengthOfPlate5 = f5['lengthOfPlate']
+deltax5 = f5['deltax']
+deltay5 = f5['deltay']
+xNodes5,yNodes5 = presDomain5.shape
+x5 = np.arange(xNodes5)*deltax5
+y5 = np.arange(yNodes5)*deltay5
 
-print(int(yNodes1-1)*deltax1.value)
-print(int(yNodes2-1)*deltax2.value)
-print(int(yNodes3-1)*deltax3.value)
-print(int(yNodes4-1)*deltax4.value)
+
+# nondimensionalizing y
+y1bar = np.linspace(0,(y1[-1]/x1[-1]) * (931.944399)**0.5,yNodes1)
+y2bar = np.linspace(0,(y2[-1]/x2[-1]) * (931.944399)**0.5,yNodes2)
+y3bar = np.linspace(0,(y3[-1]/x3[-1]) * (931.944399)**0.5,yNodes3)
+y4bar = np.linspace(0,(y4[-1]/x4[-1]) * (931.944399)**0.5,yNodes4)
+y5bar = np.linspace(0,(y5[-1]/x5[-1]) * (931.944399)**0.5,yNodes5)
 
 
-plt.plot(presDomain1[int(yNodes1)-1,:],y1,label='4,900 Cells')
-plt.plot(presDomain2[int(yNodes2)-1,:],y2,label='10,000 Cells')
-plt.plot(presDomain3[int(yNodes3)-1,:],y3,label='19,600 Cells')
-plt.plot(presDomain4[int(yNodes4)-1,:],y4,label='40,000 Cells')
+# Plotting at outflow (trailing edge)
+plt.plot(presDomain1[int(yNodes1)-1,:]/presDomain1[0,-1],y1bar,label='4,900 Cells')
+plt.plot(presDomain2[int(yNodes2)-1,:]/presDomain2[0,-1],y2bar,label='10,000 Cells')
+plt.plot(presDomain3[int(yNodes3)-1,:]/presDomain3[0,-1],y3bar,label='19,600 Cells')
+plt.plot(presDomain4[int(yNodes4)-1,:]/presDomain4[0,-1],y4bar,label='40,000 Cells')
+plt.plot(presDomain5[int(yNodes5)-1,:]/presDomain5[0,-1],y5bar,label='80,000 Cells')
+plt.title('Pressure at outflow')
+plt.legend()
+plt.grid(True)
+plt.xlabel('Pressure')
+plt.ylabel('Normalized y')
+plt.show()
+plt.plot(uVelDomain1[int(yNodes1)-1,:]/uVelDomain1[0,-1],y1bar,label='4,900 Cells')
+plt.plot(uVelDomain2[int(yNodes2)-1,:]/uVelDomain1[0,-1],y2bar,label='10,000 Cells')
+plt.plot(uVelDomain3[int(yNodes3)-1,:]/uVelDomain1[0,-1],y3bar,label='19,600 Cells')
+plt.plot(uVelDomain4[int(yNodes4)-1,:]/uVelDomain1[0,-1],y4bar,label='40,000 Cells')
+plt.plot(uVelDomain5[int(yNodes5)-1,:]/uVelDomain1[0,-1],y5bar,label='80,000 Cells')
+plt.title('u-vel at outflow')
+plt.legend()
+plt.grid(True)
+plt.xlabel('u-vel')
+plt.ylabel('Normalized y')
+plt.show()
+plt.plot(tempDomain1[int(yNodes1)-1,:]/tempDomain1[0,-1],y1bar,label='4,900 Cells')
+plt.plot(tempDomain2[int(yNodes2)-1,:]/tempDomain1[0,-1],y2bar,label='10,000 Cells')
+plt.plot(tempDomain3[int(yNodes3)-1,:]/tempDomain1[0,-1],y3bar,label='19,600 Cells')
+plt.plot(tempDomain4[int(yNodes4)-1,:]/tempDomain1[0,-1],y4bar,label='40,000 Cells')
+plt.plot(tempDomain5[int(yNodes5)-1,:]/tempDomain1[0,-1],y5bar,label='80,000 Cells')
+plt.title('temp at outflow')
+plt.legend()
+plt.grid(True)
+plt.xlabel('u-vel')
+plt.ylabel('Normalized y')
+plt.show()
+
+# Plotting at plate
+plt.plot(x1,presDomain1[:,0]/presDomain1[0,-1],label='4,900 Cells')
+plt.plot(x2,presDomain2[:,0]/presDomain2[0,-1],label='10,000 Cells')
+plt.plot(x3,presDomain3[:,0]/presDomain3[0,-1],label='19,600 Cells')
+plt.plot(x4,presDomain4[:,0]/presDomain4[0,-1],label='40,000 Cells')
+plt.plot(x5,presDomain5[:,0]/presDomain5[0,-1],label='80,000 Cells')
+plt.title('Pressure at Surface')
+plt.legend()
+plt.grid(True)
+plt.xlabel('x-location on plate')
+plt.ylabel('nondimensionalized pressure')
+plt.show()
+
+
+
+
 
 
 psum1 = (presDomain1[:,0].sum()*deltax1)
 psum2 = (presDomain2[:,0].sum()*deltax2)
 psum3 = (presDomain3[:,0].sum()*deltax3)
 psum4 = (presDomain4[:,0].sum()*deltax4)
+psum5 = (presDomain5[:,0].sum()*deltax5)
 
 # change in pressure on plate N/m^2
+header('pressure on plate')
 d1 = psum2-psum1
 d2 = psum3-psum2
 d3 = psum4-psum3
+d4 = psum5-psum4
 print(abs(d1))
 print(abs(d2))
 print(abs(d3))
+print(abs(d4))
 
 #max pressures
+header('max pressure')
 print(presDomain1.max())
 print(presDomain2.max())
 print(presDomain3.max())
 print(presDomain4.max())
+print(presDomain5.max())
 
 
-plt.legend()
-plt.grid(True)
-plt.xlabel('Pressure')
-plt.ylabel('y Location')
-plt.show()

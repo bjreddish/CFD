@@ -291,6 +291,22 @@ def updateBoundaryCond(presDomain,tempDomain,uVelDomain,vVelDomain):
 	uVelDomain[-1,1:-1] = 2*uVelDomain[-2,1:-1] - uVelDomain[-3,1:-1]
 	vVelDomain[-1,1:-1] = 2*vVelDomain[-2,1:-1] - vVelDomain[-3,1:-1]
 	return presDomain,tempDomain,uVelDomain,vVelDomain
+
+def updateAdiabaticBoundaryCond(presDomain,tempDomain,uVelDomain,vVelDomain):
+	"""
+	Inflow and top BC's do not change
+	Wall u, v and T do not change but pressure does
+	Outflow all values float
+	"""
+	# Wall 
+	presDomain[1:,0] = 2*presDomain[1:,1] - presDomain[1:,2]
+	tempDomain[1:,0] = tempDomain[1:,1] # no heat exchange between wall and flow
+	# Outflow
+	presDomain[-1,1:-1] = 2*presDomain[-2,1:-1] - presDomain[-3,1:-1]
+	tempDomain[-1,1:-1] = 2*tempDomain[-2,1:-1] - tempDomain[-3,1:-1]
+	uVelDomain[-1,1:-1] = 2*uVelDomain[-2,1:-1] - uVelDomain[-3,1:-1]
+	vVelDomain[-1,1:-1] = 2*vVelDomain[-2,1:-1] - vVelDomain[-3,1:-1]
+	return presDomain,tempDomain,uVelDomain,vVelDomain	
 ########################
 #Time Step Calculations#
 ########################
@@ -366,7 +382,7 @@ def corrector(U1,U2,U3,U5,U1Bar,U2Bar,U3Bar,U5Bar,E1Bar,E2Bar,
 #Iteration Scheme#
 ##################
 def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,
-	muDomain,deltat,deltay,deltax,cp,cv,R,tempRef,muRef):
+	muDomain,deltat,deltay,deltax,cp,cv,R,tempRef,muRef,adiabatic):
 	"""
 	We will be using the MacCormack method to solve the 
 	Navier-Stokes equation. 
@@ -395,8 +411,12 @@ def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,
 	presDomain,tempDomain,uVelDomain,vVelDomain = U2Prim(
 		U1Bar,U2Bar,U3Bar,U5Bar,R,cv)
 	# Update BC's
-	presDomain,tempDomain,uVelDomain,vVelDomain = updateBoundaryCond(
-		presDomain,tempDomain,uVelDomain,vVelDomain) 
+	if adiabatic == False:
+		presDomain,tempDomain,uVelDomain,vVelDomain = updateBoundaryCond(
+			presDomain,tempDomain,uVelDomain,vVelDomain) 
+	else:
+		presDomain,tempDomain,uVelDomain,vVelDomain = updateAdiabaticBoundaryCond(
+			presDomain,tempDomain,uVelDomain,vVelDomain) 
 	################
 	#Corrector Step#
 	################
@@ -418,13 +438,17 @@ def solveFlow(presDomain,tempDomain,uVelDomain,vVelDomain,
 		E1Bar,E2Bar,E3Bar,E5Bar,F1Bar,F2Bar,F3Bar,F5Bar,deltat,deltax,deltay)
 	presDomain,tempDomain,uVelDomain,vVelDomain = U2Prim(U1New,U2New,U3New,U5New,R,cv)
 	# Update BC's
-	presDomain,tempDomain,uVelDomain,vVelDomain = updateBoundaryCond(
-		presDomain,tempDomain,uVelDomain,vVelDomain) 
+	if adiabatic == False:
+		presDomain,tempDomain,uVelDomain,vVelDomain = updateBoundaryCond(
+			presDomain,tempDomain,uVelDomain,vVelDomain) 
+	else:
+		presDomain,tempDomain,uVelDomain,vVelDomain = updateAdiabaticBoundaryCond(
+			presDomain,tempDomain,uVelDomain,vVelDomain)  
 	return presDomain,tempDomain,uVelDomain,vVelDomain
 #############
 #MAIN SCRIPT#
 #############
-def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K):
+def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K,adiabatic):
 	"""
 	This program uses an iterative method to solve
 	the full Navier-Stokes equation for super sonic
@@ -487,7 +511,7 @@ def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K):
 		#Solve internal points
 		presDomain,tempDomain,uVelDomain,vVelDomain = solveFlow(
 			presDomain,tempDomain,uVelDomain,vVelDomain,muDomain,
-			deltat,deltay,deltax,cp,cv,R,tempRef,muRef)
+			deltat,deltay,deltax,cp,cv,R,tempRef,muRef,adiabatic)
 		rhoNew = presDomain/(R*tempDomain)
 		residuals = rhoOld - rhoNew
 		residual = np.append(residual,residuals.max())
@@ -535,16 +559,17 @@ def plotParam(param):
 
 def main():
 	# User Input
-	girdPtsX=280
-	girdPtsY=280
+	adiabatic = True
+	girdPtsX=40
+	girdPtsY=50
 	machInf=4
 	TwTInf=1
 	residualTarget=10**-8
-	corantNumber = 0.1
+	corantNumber = 0.55
 	lengthOfPlate =0.00001
 	# Run main CFD code
 	presDomain,tempDomain,uVelDomain,vVelDomain,residual,deltax,deltay = superVisc(
-		lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,corantNumber)
+		lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,corantNumber,adiabatic)
 	# Residual Plot
 	plt.plot(residual)
 	plt.grid(True)
