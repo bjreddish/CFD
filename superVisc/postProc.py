@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import h5py
 
 
-def plotFlow(x,y,pres,temp,uVel,vVel):
+def plotFlow(x,y,pres,temp,uVel,vVel,vTotal):
 	"""
 	Plotting script to show flowfiled 
 	"""
@@ -12,7 +12,7 @@ def plotFlow(x,y,pres,temp,uVel,vVel):
 	# Pressure
 	plt.figure(1)
 	# plt.subplot(2,2,1)
-	plt.contourf(X,Y,pres.transpose())
+	plt.contourf(X,Y,pres.transpose(),100)
 	plt.colorbar(label='N/m^2')
 	plt.xlabel('x(m)')
 	plt.ylabel('y(m)')
@@ -21,7 +21,7 @@ def plotFlow(x,y,pres,temp,uVel,vVel):
 	# Temperature
 	plt.figure(2)
 	# plt.subplot(2,2,2)
-	plt.contourf(X,Y,temp.transpose())
+	plt.contourf(X,Y,temp.transpose(),100)
 	plt.colorbar(label='K')
 	plt.xlabel('x(m)')
 	plt.ylabel('y(m)')
@@ -30,7 +30,7 @@ def plotFlow(x,y,pres,temp,uVel,vVel):
 	# U Vel
 	plt.figure(3)
 	# plt.subplot(2,2,3)
-	plt.contourf(X,Y,uVel.transpose())
+	plt.contourf(X,Y,uVel.transpose(),100)
 	plt.colorbar(label='m/s')
 	plt.xlabel('x(m)')
 	plt.ylabel('y(m)')
@@ -39,12 +39,20 @@ def plotFlow(x,y,pres,temp,uVel,vVel):
 	# V Vel
 	plt.figure(4)
 	# plt.subplot(2,2,4)
-	plt.contourf(X,Y,vVel.transpose())
+	plt.contourf(X,Y,vVel.transpose(),100)
 	plt.colorbar(label='m/s')
 	plt.xlabel('x(m)')
 	plt.ylabel('y(m)')
 	plt.grid(True)
 	plt.title('V Vel')
+	plt.show()
+
+	plt.contourf(X,Y,vTotal.transpose(),100)
+	plt.colorbar(label='m/s')
+	plt.xlabel('x(m)')
+	plt.ylabel('y(m)')
+	plt.grid(True)
+	plt.title('Velocity')
 	plt.show()
 	return
 
@@ -56,6 +64,7 @@ presDomain = f['pres'][:,:]
 tempDomain = f['temp'][:,:]
 uVelDomain = f['u'][:,:]
 vVelDomain = f['v'][:,:]
+vTotal = (uVelDomain**2 + vVelDomain**2)**0.5
 residual = f['residual'][:]
 lengthOfPlate = f['lengthOfPlate']
 deltax = f['deltax']
@@ -63,7 +72,7 @@ deltay = f['deltay']
 xNodes,yNodes = presDomain.shape
 x = np.arange(xNodes)*deltax
 y = np.arange(yNodes)*deltay
-plotFlow(x,y,presDomain,tempDomain,uVelDomain,vVelDomain)
+plotFlow(x,y,presDomain,tempDomain,uVelDomain,vVelDomain,vTotal)
 plt.plot(residual)
 plt.grid(True)
 plt.yscale('log')

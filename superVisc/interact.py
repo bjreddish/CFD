@@ -261,12 +261,22 @@ def initBoundaryCond(presDomain,tempDomain,uVelDomain,vVelDomain,tempWall):
 	Calculation of boundary conditions
 	"""
 	# Case 1. [0,0] leading edge
+	#top
 	uVelDomain[0,0] = 0
 	vVelDomain[0,0] = 0
+
+
 	# Case 2. [0,1:] inflow and [:.-1] top 
 	vVelDomain[0,1:]  = 0  # not including leading edge
-	vVelDomain[:,-1]  = 0
-	# Case 3. [:,0] bottom (flat plate wall)
+
+	# Case 3. [:,0] bottom and top (flat plate wall)
+	uVelDomain[0,-1] = 0
+	vVelDomain[0,-1] = 0
+	presDomain[1:,-1] = 2*presDomain[1:,-2] - presDomain[1:,-3]
+	tempDomain[1:,-1] = tempWall
+	uVelDomain[1:,-1] = 0
+	vVelDomain[1:,-1] = 0
+
 	presDomain[1:,0] = 2*presDomain[1:,1] - presDomain[1:,2]
 	tempDomain[1:,0] = tempWall
 	uVelDomain[1:,0] = 0
@@ -285,6 +295,7 @@ def updateBoundaryCond(presDomain,tempDomain,uVelDomain,vVelDomain):
 	"""
 	# Wall 
 	presDomain[1:,0] = 2*presDomain[1:,1] - presDomain[1:,2]
+	presDomain[1:,-1] = 2*presDomain[1:,-2] - presDomain[1:,-3]
 	# Outflow
 	presDomain[-1,1:-1] = 2*presDomain[-2,1:-1] - presDomain[-3,1:-1]
 	tempDomain[-1,1:-1] = 2*tempDomain[-2,1:-1] - tempDomain[-3,1:-1]
@@ -562,13 +573,13 @@ def plotParam(param):
 def main():
 	# User Input
 	adiabatic = False
-	girdPtsX=70
+	girdPtsX=200
 	girdPtsY=70
 	machInf=4
 	TwTInf=1
 	residualTarget=10**-8
 	corantNumber = 0.6
-	lengthOfPlate =0.00001
+	lengthOfPlate =0.000025
 	# Run main CFD code
 	presDomain,tempDomain,uVelDomain,vVelDomain,residual,deltax,deltay = superVisc(
 		lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,corantNumber,adiabatic)
