@@ -53,6 +53,7 @@ def plotFlow(x,y,pres,temp,uVel,vVel):
 f1 = h5py.File('baseCase.h5', 'r')
 presDomain1 = f1['pres'][:,:]
 tempDomain1 = f1['temp'][:,:]
+rhoDomain1 = presDomain1/(287*tempDomain1)
 uVelDomain1 = f1['u'][:,:]
 vVelDomain1 = f1['v'][:,:]
 residual1 = f1['residual'][:]
@@ -67,6 +68,7 @@ y1 = np.arange(yNodes1)*deltay1
 f2 = h5py.File('100base.h5', 'r')
 presDomain2 = f2['pres'][:,:]
 tempDomain2 = f2['temp'][:,:]
+rhoDomain2 = presDomain2/(287*tempDomain2)
 uVelDomain2 = f2['u'][:,:]
 vVelDomain2 = f2['v'][:,:]
 residual2 = f2['residual'][:]
@@ -81,6 +83,7 @@ y2 = np.arange(yNodes2)*deltay2
 f3 = h5py.File('140base.h5', 'r')
 presDomain3 = f3['pres'][:,:]
 tempDomain3 = f3['temp'][:,:]
+rhoDomain3 = presDomain3/(287*tempDomain3)
 uVelDomain3 = f3['u'][:,:]
 vVelDomain3 = f3['v'][:,:]
 residual3 = f3['residual'][:]
@@ -94,6 +97,7 @@ y3 = np.arange(yNodes3)*deltay3
 f4 = h5py.File('200base.h5', 'r')
 presDomain4 = f4['pres'][:,:]
 tempDomain4 = f4['temp'][:,:]
+rhoDomain4 = presDomain4/(287*tempDomain4)
 uVelDomain4 = f4['u'][:,:]
 vVelDomain4 = f4['v'][:,:]
 residual4 = f4['residual'][:]
@@ -107,6 +111,7 @@ y4 = np.arange(yNodes4)*deltay4
 f5 = h5py.File('280base.h5', 'r')
 presDomain5 = f5['pres'][:,:]
 tempDomain5 = f5['temp'][:,:]
+rhoDomain5 = presDomain5/(287*tempDomain5)
 uVelDomain5 = f5['u'][:,:]
 vVelDomain5 = f5['v'][:,:]
 residual5 = f5['residual'][:]
@@ -127,6 +132,7 @@ y5bar = np.linspace(0,(y5[-1]/x5[-1]) * (931.944399)**0.5,yNodes5)
 
 
 # Plotting at outflow (trailing edge)
+# pressure
 plt.plot(presDomain1[int(yNodes1)-1,:]/presDomain1[0,-1],y1bar,label='4,900 Cells')
 plt.plot(presDomain2[int(yNodes2)-1,:]/presDomain2[0,-1],y2bar,label='10,000 Cells')
 plt.plot(presDomain3[int(yNodes3)-1,:]/presDomain3[0,-1],y3bar,label='19,600 Cells')
@@ -137,7 +143,10 @@ plt.legend()
 plt.grid(True)
 plt.xlabel('Pressure')
 plt.ylabel('Normalized y')
-plt.show()
+# plt.show()
+
+
+# u Vel
 plt.plot(uVelDomain1[int(yNodes1)-1,:]/uVelDomain1[0,-1],y1bar,label='4,900 Cells')
 plt.plot(uVelDomain2[int(yNodes2)-1,:]/uVelDomain1[0,-1],y2bar,label='10,000 Cells')
 plt.plot(uVelDomain3[int(yNodes3)-1,:]/uVelDomain1[0,-1],y3bar,label='19,600 Cells')
@@ -148,7 +157,9 @@ plt.legend()
 plt.grid(True)
 plt.xlabel('u-vel')
 plt.ylabel('Normalized y')
-plt.show()
+# plt.show()
+
+# Temp 
 plt.plot(tempDomain1[int(yNodes1)-1,:]/tempDomain1[0,-1],y1bar,label='4,900 Cells')
 plt.plot(tempDomain2[int(yNodes2)-1,:]/tempDomain1[0,-1],y2bar,label='10,000 Cells')
 plt.plot(tempDomain3[int(yNodes3)-1,:]/tempDomain1[0,-1],y3bar,label='19,600 Cells')
@@ -157,9 +168,9 @@ plt.plot(tempDomain5[int(yNodes5)-1,:]/tempDomain1[0,-1],y5bar,label='80,000 Cel
 plt.title('temp at outflow')
 plt.legend()
 plt.grid(True)
-plt.xlabel('u-vel')
+plt.xlabel('Temperature')
 plt.ylabel('Normalized y')
-plt.show()
+# plt.show()
 
 # Plotting at plate
 plt.plot(x1,presDomain1[:,0]/presDomain1[0,-1],label='4,900 Cells')
@@ -172,36 +183,52 @@ plt.legend()
 plt.grid(True)
 plt.xlabel('x-location on plate')
 plt.ylabel('nondimensionalized pressure')
-plt.show()
+# plt.show()
 
 
 
+# Density 
+plt.plot(rhoDomain1[int(yNodes1)-1,:]/rhoDomain1[0,-1],y1bar,label='4,900 Cells')
+plt.plot(rhoDomain2[int(yNodes2)-1,:]/rhoDomain2[0,-1],y2bar,label='10,000 Cells')
+plt.plot(rhoDomain3[int(yNodes3)-1,:]/rhoDomain3[0,-1],y3bar,label='19,600 Cells')
+plt.plot(rhoDomain4[int(yNodes4)-1,:]/rhoDomain4[0,-1],y4bar,label='40,000 Cells')
+plt.plot(rhoDomain5[int(yNodes5)-1,:]/rhoDomain5[0,-1],y5bar,label='80,000 Cells')
+plt.title('Density at outflow')
+plt.legend()
+plt.grid(True)
+plt.xlabel('Density')
+plt.ylabel('Normalized y')
+# plt.show()
 
 
+# psum1 = (presDomain1[:,0].sum()*deltax1)
+# psum2 = (presDomain2[:,0].sum()*deltax2)
+# psum3 = (presDomain3[:,0].sum()*deltax3)
+# psum4 = (presDomain4[:,0].sum()*deltax4)
+# psum5 = (presDomain5[:,0].sum()*deltax5)
 
-psum1 = (presDomain1[:,0].sum()*deltax1)
-psum2 = (presDomain2[:,0].sum()*deltax2)
-psum3 = (presDomain3[:,0].sum()*deltax3)
-psum4 = (presDomain4[:,0].sum()*deltax4)
-psum5 = (presDomain5[:,0].sum()*deltax5)
+# # change in pressure on plate N/m^2
+# header('pressure on plate')
+# d1 = psum2-psum1
+# d2 = psum3-psum2
+# d3 = psum4-psum3
+# d4 = psum5-psum4
+# print(abs(d1))
+# print(abs(d2))
+# print(abs(d3))
+# print(abs(d4))
 
-# change in pressure on plate N/m^2
-header('pressure on plate')
-d1 = psum2-psum1
-d2 = psum3-psum2
-d3 = psum4-psum3
-d4 = psum5-psum4
-print(abs(d1))
-print(abs(d2))
-print(abs(d3))
-print(abs(d4))
-
-#max pressures
-header('max pressure')
-print(presDomain1.max())
-print(presDomain2.max())
-print(presDomain3.max())
-print(presDomain4.max())
-print(presDomain5.max())
+# #max pressures
+# header('max pressure')
+# print(presDomain1.max())
+# print(presDomain2.max())
+# print(presDomain3.max())
+# print(presDomain4.max())
+# print(presDomain5.max())
 
 
+print(rhoDomain1[int(yNodes1)-1,:].sum()*deltay1)
+print(rhoDomain2[int(yNodes2)-1,:].sum()*deltay2)
+print(rhoDomain3[int(yNodes3)-1,:].sum()*deltay3)
+print(rhoDomain4[int(yNodes4)-1,:].sum()*deltay4)
+print(rhoDomain5[int(yNodes5)-1,:].sum()*deltay5)

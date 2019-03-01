@@ -462,9 +462,9 @@ def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K,ad
 	K           - Courant number
 	"""
 	# Set flow/geometry parameters
-	aInf         = 340.28        # Speed of sound: m/s
-	pressureInf  = 101325.0      # Pressure N/m^2
-	tempInf      = 288.16        # Kelvin
+	aInf         = 317        # Speed of sound: m/s
+	pressureInf  = 21.96    # Pressure N/m^2
+	tempInf      = 247.02      # Kelvin
 	gamma        = 1.4           # Ratio of specific heats
 	Pr           = 0.71          # Prandtl number
 	muRef        = 1.7894*10**-5  # Dynamic viscosity reference kg/(m*s)
@@ -504,7 +504,7 @@ def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K,ad
 	iteration = 1
 	residual = np.array([.1])
 	# Begin Simulations 
-	while residual[iteration-1] > residualTarget:
+	while residual[iteration-1] > residualTarget or iteration <50:
 		rhoOld = presDomain/(R*tempDomain)
 		# Calculate time step
 		muDomain = calcMu(muRef,tempDomain,tempRef)
@@ -532,43 +532,43 @@ def plotFlow(pres,temp,uVel,vVel):
 	# Pressure
 	plt.figure()
 	plt.subplot(2,2,1)
-	plt.contourf(pres.transpose())
+	plt.contourf(pres.transpose(),100)
 	plt.colorbar()
 	plt.title('Pressure')
 	# Temperature
 	plt.subplot(2,2,2)
-	plt.contourf(temp.transpose())
+	plt.contourf(temp.transpose(),100)
 	plt.colorbar()
 	plt.title('Temp')
 	# U Vel
 	plt.subplot(2,2,3)
-	plt.contourf(uVel.transpose())
+	plt.contourf(uVel.transpose(),100)
 	plt.colorbar()
 	plt.title('U Vel')
 	# V Vel
 	plt.subplot(2,2,4)
-	plt.contourf(vVel.transpose())
+	plt.contourf(vVel.transpose(),100)
 	plt.colorbar()
 	plt.title('V Vel')
 	plt.show()
 	return
 def plotParam(param):
 	plt.figure()
-	plt.contourf(param.transpose())
+	plt.contourf(param.transpose(),100)
 	plt.colorbar()
 	plt.show()
 	return
 
 def main():
 	# User Input
-	adiabatic = True
-	girdPtsX=142
-	girdPtsY=142
-	machInf=4
+	adiabatic = False
+	girdPtsX=242
+	girdPtsY=242
+	machInf=25
 	TwTInf=1
 	residualTarget=10**-8
-	corantNumber = 0.4
-	lengthOfPlate =0.00001
+	corantNumber = 0.25
+	lengthOfPlate =0.005
 	# Run main CFD code
 	presDomain,tempDomain,uVelDomain,vVelDomain,residual,deltax,deltay = superVisc(
 		lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,corantNumber,adiabatic)
@@ -597,6 +597,4 @@ def main():
 		h5f.close()
 		print(fileName, 'saved')
 	pass
-
 main()
-
