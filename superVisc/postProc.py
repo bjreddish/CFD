@@ -9,10 +9,11 @@ def plotFlow(x,y,pres,temp,uVel,vVel,vTotal):
 	"""
 	# Create mesh for points
 	X, Y = np.meshgrid(x, y)
+	levs = 25
 	# Pressure
 	plt.figure(1)
 	# plt.subplot(2,2,1)
-	plt.contourf(X,Y,pres.transpose(),100)
+	plt.contourf(X,Y,pres.transpose(),levs)
 	plt.colorbar(label='N/m^2')
 	plt.xlabel('x(m)')
 	plt.ylabel('y(m)')
@@ -21,7 +22,7 @@ def plotFlow(x,y,pres,temp,uVel,vVel,vTotal):
 	# Temperature
 	plt.figure(2)
 	# plt.subplot(2,2,2)
-	plt.contourf(X,Y,temp.transpose(),100)
+	plt.contourf(X,Y,temp.transpose(),levs)
 	plt.colorbar(label='K')
 	plt.xlabel('x(m)')
 	plt.ylabel('y(m)')
@@ -30,7 +31,7 @@ def plotFlow(x,y,pres,temp,uVel,vVel,vTotal):
 	# U Vel
 	plt.figure(3)
 	# plt.subplot(2,2,3)
-	plt.contourf(X,Y,uVel.transpose(),100)
+	plt.contourf(X,Y,uVel.transpose(),levs)
 	plt.colorbar(label='m/s')
 	plt.xlabel('x(m)')
 	plt.ylabel('y(m)')
@@ -39,7 +40,7 @@ def plotFlow(x,y,pres,temp,uVel,vVel,vTotal):
 	# V Vel
 	plt.figure(4)
 	# plt.subplot(2,2,4)
-	plt.contourf(X,Y,vVel.transpose(),100)
+	plt.contourf(X,Y,vVel.transpose(),levs)
 	plt.colorbar(label='m/s')
 	plt.xlabel('x(m)')
 	plt.ylabel('y(m)')
@@ -47,7 +48,7 @@ def plotFlow(x,y,pres,temp,uVel,vVel,vTotal):
 	plt.title('V Vel')
 	plt.show()
 
-	plt.contourf(X,Y,vTotal.transpose(),100)
+	plt.contourf(X,Y,vTotal.transpose(),levs)
 	plt.colorbar(label='m/s')
 	plt.xlabel('x(m)')
 	plt.ylabel('y(m)')
