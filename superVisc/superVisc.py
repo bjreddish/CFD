@@ -504,7 +504,7 @@ def superVisc(lengthOfPlate,girdPtsX,girdPtsY,machInf,TwTInf,residualTarget,K,ad
 	iteration = 1
 	residual = np.array([.1])
 	# Begin Simulations 
-	while residual[iteration-1] > residualTarget:
+	while residual[iteration-1] > residualTarget or iteration<100:
 		rhoOld = presDomain/(R*tempDomain)
 		# Calculate time step
 		muDomain = calcMu(muRef,tempDomain,tempRef)
@@ -561,13 +561,13 @@ def plotParam(param):
 
 def main():
 	# User Input
-	adiabatic = True
+	adiabatic = False
 	girdPtsX=142
 	girdPtsY=142
 	machInf=4
 	TwTInf=1
 	residualTarget=10**-8
-	corantNumber = 0.4
+	corantNumber = 0.1
 	lengthOfPlate =0.00001
 	# Run main CFD code
 	presDomain,tempDomain,uVelDomain,vVelDomain,residual,deltax,deltay = superVisc(

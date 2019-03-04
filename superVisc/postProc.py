@@ -9,7 +9,7 @@ def plotFlow(x,y,pres,temp,uVel,vVel,vTotal):
 	"""
 	# Create mesh for points
 	X, Y = np.meshgrid(x, y)
-	levs = 25
+	levs = 50
 	# Pressure
 	plt.figure(1)
 	# plt.subplot(2,2,1)

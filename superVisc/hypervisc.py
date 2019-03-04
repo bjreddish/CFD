@@ -562,12 +562,12 @@ def plotParam(param):
 def main():
 	# User Input
 	adiabatic = False
-	girdPtsX=70
-	girdPtsY=70
+	girdPtsX=140
+	girdPtsY=140
 	machInf=25
 	TwTInf=1
 	residualTarget=10**-8
-	corantNumber = 0.1
+	corantNumber = 0.05
 	lengthOfPlate =0.005
 	# Run main CFD code
 	presDomain,tempDomain,uVelDomain,vVelDomain,residual,deltax,deltay = superVisc(
