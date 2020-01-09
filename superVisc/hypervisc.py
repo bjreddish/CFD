@@ -562,12 +562,12 @@ def plotParam(param):
 def main():
 	# User Input
 	adiabatic = False
-	girdPtsX=140
-	girdPtsY=140
-	machInf=25
-	TwTInf=1
-	residualTarget=10**-8
-	corantNumber = 0.05
+	girdPtsX=65
+	girdPtsY=65
+	machInf=9
+	TwTInf=1 # wall freesteam temperature ratio
+	residualTarget=10**-5
+	corantNumber = 0.1
 	lengthOfPlate =0.005
 	# Run main CFD code
 	presDomain,tempDomain,uVelDomain,vVelDomain,residual,deltax,deltay = superVisc(
