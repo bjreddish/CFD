@@ -7,3 +7,6 @@ Three versions of the code exist to model different conditions of flow. The firs
 The scripts produce data for the flow field at steady state at the end of the simulation and save them as .h5 files. These files can then be processed with the post processing python scripts in the same directory. 
 
 A brief overview of the theory used in the code, and some results are recorded in a [jupyter notebook]( https://nbviewer.jupyter.org/github/bjreddish/CFD/blob/master/superVisc/superViscFlatPlate.ipynb)
+
+
+![Hypersonic Velocity](https://github.com/bjreddish/CFD/blob/master/superVisc/images/hypersonicVel.png)
